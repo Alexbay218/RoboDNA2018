@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="RoboDNA2018" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="bin/Release/RoboDNA2018" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-std=c++11" />
+					<Add option="-m32" />
+					<Add option="-DSFML_STATIC" />
+					<Add directory="include" />
+					<Add directory="D:/Libraries/SFML-2.4.2/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-m32" />
+					<Add library="D:/Libraries/SFML-2.4.2/lib/libsfml-graphics.a" />
+					<Add library="D:/Libraries/SFML-2.4.2/lib/libsfml-window.a" />
+					<Add library="D:/Libraries/SFML-2.4.2/lib/libsfml-system.a" />
+					<Add directory="D:/Libraries/SFML-2.4.2/lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="include/alliance.h" />
+		<Unit filename="include/element.h" />
+		<Unit filename="include/field.h" />
+		<Unit filename="include/match.h" />
+		<Unit filename="include/robot.h" />
+		<Unit filename="src/alliance.cpp" />
+		<Unit filename="src/element.cpp" />
+		<Unit filename="src/field.cpp" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/match.cpp" />
+		<Unit filename="src/robot.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
