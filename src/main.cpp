@@ -14,17 +14,18 @@ int main(int argc, char** argv) {
     sf::Font font;
     if(!font.loadFromFile(path)) {
         std::cout << "ERROR: Cannot load font" << std::endl;
-        return 0;
+        //return 0;
     }
 
     sf::Clock clock;
 
     std::vector<robot> rrtmp;
-    rrtmp.push_back(*(new robot("aawwwwwwxxxxxwww", "zsope")));
-    rrtmp.push_back(*(new robot("aaassssssssssscc", "sopze")));
-    rrtmp.push_back(*(new robot("aaaeeeeewwwwwccc", "zsope")));
+    rrtmp.push_back(*(new robot("aaeeeesssssssccc", "zsope")));
+    rrtmp.push_back(*(new robot("waawwweesssssccc", "zsope")));
+    rrtmp.push_back(*(new robot("aaawwwwwwwwwwwww", "zsope")));
 
-    alliance red(rrtmp, true);
+    alliance red("4533738C",rrtmp, true);
+    //alliance red("FF3FF3FF",rrtmp, true);
 
     std::vector<robot> brtmp;
     brtmp.push_back(*(new robot("aawwwwwwwwwwwwww", "zsope")));
@@ -32,16 +33,28 @@ int main(int argc, char** argv) {
     brtmp.push_back(*(new robot("aaaxxxxxxxxxxccc", "opsze")));
 
     alliance blue(brtmp, false);
-
-    match m1(red, blue, 250,  static_cast<long int>(time(NULL)), 20, &font, 0, 0);
-    m1.winThread.join();
-    m1.execMatch.join();
-    /*
-    match m2(red, blue, 100,  static_cast<long int>(time(NULL)), 7, &font, 0, 1);
-    match m3(red, blue, 100,  static_cast<long int>(time(NULL)), 7, &font, 0, 2);
-    m1.execMatch.join();
-    m2.execMatch.join();
-    m3.execMatch.join();
+    ///*
+    match first(red, blue, 250, static_cast<long int>(time(NULL)-9), 20, &font, 0, 0);
+    first.execMatch.join();
+    first.winThread.join();
     //*/
+    std::vector<match*> matches;
+    for(int i = 0;i < 10;i++) {
+        for(int j = 0;j < 10;j++) {
+            matches.push_back((new match(red, blue, 0, static_cast<long int>(time(NULL)+i+j), 0, &font, i, j)));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+    for(int k = 0;k < matches.size();k++) {
+        if(matches[k]->execMatch.joinable()) {
+            matches[k]->execMatch.join();
+        }
+    }
+    for(int l = 0;l < matches.size();l++) {
+        if(matches[l]->winThread.joinable()) {
+            matches[l]->winThread.join();
+        }
+    }
+
     return 0;
 }

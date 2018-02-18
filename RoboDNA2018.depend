@@ -1,13 +1,15 @@
 # depslib dependency file v1.0
-1517613754 source:f:\projects\robodna2018\src\main.cpp
-	<SFML/Graphics.hpp>
-	<iostream>
-	<thread>
-	<time.h>
-	<vector>
-	"match.h"
+1518922299 source:f:\projects\robodna2018\src\alliance.cpp
 	"alliance.h"
+
+1518921086 f:\projects\robodna2018\include\alliance.h
+	<string>
+	<vector>
 	"robot.h"
+
+1518828873 f:\projects\robodna2018\include\robot.h
+	<SFML/Graphics.hpp>
+	<string>
 
 1515800371 d:\libraries\sfml-2.4.2\include\sfml\graphics.hpp
 	<SFML/Window.hpp>
@@ -397,46 +399,46 @@
 	<string>
 	<vector>
 
-1517613559 source:f:\projects\robodna2018\src\robot.cpp
-	"robot.h"
-
-1517613783 f:\projects\robodna2018\include\robot.h
-	<SFML/Graphics.hpp>
-	<string>
-
-1517253228 source:f:\projects\robodna2018\src\alliance.cpp
-	"alliance.h"
-
-1517253319 f:\projects\robodna2018\include\alliance.h
-	<vector>
-	"robot.h"
-
 1517614169 source:f:\projects\robodna2018\src\element.cpp
 	"element.h"
 
 1517244026 f:\projects\robodna2018\include\element.h
 	<SFML/Graphics.hpp>
 
-1517614490 source:f:\projects\robodna2018\src\field.cpp
+1518927480 source:f:\projects\robodna2018\src\field.cpp
 	"field.h"
 	<math.h>
 
-1517264589 f:\projects\robodna2018\include\field.h
+1518840210 f:\projects\robodna2018\include\field.h
 	<SFML/Graphics.hpp>
 	<iostream>
 	<vector>
 	"alliance.h"
 	"element.h"
 
-1517614072 source:f:\projects\robodna2018\src\match.cpp
-	<random>
-	<math.h>
-	"match.h"
-
-1517345179 f:\projects\robodna2018\include\match.h
+1518987323 source:f:\projects\robodna2018\src\main.cpp
 	<SFML/Graphics.hpp>
 	<iostream>
 	<thread>
 	<time.h>
+	<vector>
+	"match.h"
+	"alliance.h"
+	"robot.h"
+
+1518986632 f:\projects\robodna2018\include\match.h
+	<SFML/Graphics.hpp>
+	<iostream>
+	<thread>
+	<mutex>
+	<time.h>
+	<random>
+	<math.h>
 	"field.h"
+
+1518985268 source:f:\projects\robodna2018\src\robot.cpp
+	"robot.h"
+
+1518987490 source:f:\projects\robodna2018\src\match.cpp
+	"match.h"
 

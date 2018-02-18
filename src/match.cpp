@@ -1,9 +1,7 @@
-#include <random>
-#include <math.h>
 #include "match.h"
 
+
 match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, int winX, int winY) {
-    std::default_random_engine generator;
     generator.seed(sd);
     std::uniform_int_distribution<int> r1Y(3,8);
     std::uniform_int_distribution<int> r2Y(13,18);
@@ -12,6 +10,8 @@ match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, i
     std::uniform_int_distribution<int> b2Y(9,13);
     std::uniform_int_distribution<int> b3Y(18,23);
     std::uniform_int_distribution<int> randConfig(0,1);
+    climb = std::uniform_int_distribution<int>(1, 8); //12.5% chance for climb
+
     speedMulti = 1;
 
     alliance rtmp = red;
@@ -26,9 +26,13 @@ match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, i
     btmp.robots[1].posX = 53;
     btmp.robots[2].posX = 53;
 
+    isRunning = true;
+    gameField = field(rtmp, btmp, dw);
+
+    //set config (string representing the position of red position from left to right)
     config = "";
     for(int j = 0;j < 3;j++) {
-        if(randConfig(generator)) {
+        if(randConfig(generator) == 1) {
             config += 't';
         }
         else {
@@ -36,90 +40,101 @@ match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, i
         }
     }
 
-    isRunning = true;
-    if(dw > 0) {
-        gameField = field(rtmp, btmp, dw);
+    if(randConfig(generator) == 1) {
+        gameField.elements[0].currentCubeNum = 5;
+    }
+    else {
+        gameField.elements[1].currentCubeNum = 5;
+    }
+    if(randConfig(generator) == 1) {
+        gameField.elements[2].currentCubeNum = 5;
+    }
+    else {
+        gameField.elements[3].currentCubeNum = 5;
+    }
 
-    }
-    else {
-        gameField = field(rtmp, btmp, 1);
-    }
-
-    if(config[0] == 't') {
-        gameField.elements[17].drawShape.setFillColor(sf::Color::Red);
-        gameField.elements[18].drawShape.setFillColor(sf::Color::Blue);
-    }
-    else {
-        gameField.elements[17].drawShape.setFillColor(sf::Color::Blue);
-        gameField.elements[18].drawShape.setFillColor(sf::Color::Red);
-    }
-    if(config[1] == 't') {
-        gameField.elements[21].drawShape.setFillColor(sf::Color::Red);
-        gameField.elements[22].drawShape.setFillColor(sf::Color::Blue);
-    }
-    else {
-        gameField.elements[21].drawShape.setFillColor(sf::Color::Blue);
-        gameField.elements[22].drawShape.setFillColor(sf::Color::Red);
-    }
-    if(config[2] == 't') {
-        gameField.elements[19].drawShape.setFillColor(sf::Color::Red);
-        gameField.elements[20].drawShape.setFillColor(sf::Color::Blue);
-    }
-    else {
-        gameField.elements[19].drawShape.setFillColor(sf::Color::Blue);
-        gameField.elements[20].drawShape.setFillColor(sf::Color::Red);
-    }
 
     execMatch = std::thread([&](){
-        clock.restart();
         int t = 0;
-        int lastTimestamp = clock.getElapsedTime().asMilliseconds();
-        int timeInterval = ti;
         while(t < 150) {
             update(t);
-            while(timeInterval > 0 && clock.getElapsedTime().asMilliseconds() < lastTimestamp + timeInterval) {}
-            lastTimestamp = clock.getElapsedTime().asMilliseconds();
+            if(ti > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(ti));
+            }
             t++;
         }
         isRunning = false;
+        std::string res = ("Red: " + std::to_string(gameField.alliances[0].totalScore) +  " Blue: " + std::to_string(gameField.alliances[1].totalScore) + "\n");
+        cout_mutex.lock();
+        std::cout << res;
+        cout_mutex.unlock();
     });
 
     if(dw > 0) {
-        winThread = std::thread([&](){
+        if(config[0] == 't') {
+            gameField.elements[17].drawShape.setFillColor(sf::Color::Red);
+            gameField.elements[18].drawShape.setFillColor(sf::Color::Blue);
+        }
+        else {
+            gameField.elements[17].drawShape.setFillColor(sf::Color::Blue);
+            gameField.elements[18].drawShape.setFillColor(sf::Color::Red);
+        }
+        if(config[1] == 't') {
+            gameField.elements[21].drawShape.setFillColor(sf::Color::Red);
+            gameField.elements[22].drawShape.setFillColor(sf::Color::Blue);
+        }
+        else {
+            gameField.elements[21].drawShape.setFillColor(sf::Color::Blue);
+            gameField.elements[22].drawShape.setFillColor(sf::Color::Red);
+        }
+        if(config[2] == 't') {
+            gameField.elements[19].drawShape.setFillColor(sf::Color::Red);
+            gameField.elements[20].drawShape.setFillColor(sf::Color::Blue);
+        }
+        else {
+            gameField.elements[19].drawShape.setFillColor(sf::Color::Blue);
+            gameField.elements[20].drawShape.setFillColor(sf::Color::Red);
+        }
+        winThread = std::thread([this, winX, winY, f, ti](){
             sf::Context context;
-            window.create(sf::VideoMode(
-                static_cast<int>(gameField.backGround.getSize().x*1.125f),
-                static_cast<int>(gameField.backGround.getSize().y*1.125f)
-            ), "RoboDNA2018", sf::Style::Titlebar);
-            window.setPosition(sf::Vector2i(static_cast<int>(window.getSize().x*winX), static_cast<int>(window.getSize().y*winY)));
-            window.setActive(false);
+
+            this->window.create(sf::VideoMode(
+                static_cast<int>(this->gameField.backGround.getSize().x*1.125f),
+                static_cast<int>(this->gameField.backGround.getSize().y*1.125f)
+            ), "RoboDNA2018", sf::Style::None);
+            this->window.setPosition(sf::Vector2i(static_cast<int>(this->gameField.backGround.getSize().x*1.125f*winX), static_cast<int>(this->gameField.backGround.getSize().y*1.125f*winY)));
+            this->window.setFramerateLimit(1000/ti);
+            this->window.setActive(false);
+            //set fonts
+            this->gameField.redScore.setFont(*f);
+            this->gameField.blueScore.setFont(*f);
+            this->gameField.time.setFont(*f);
 
             int i = 0;
-            while(i < gameField.elements.size()) {
-                gameField.elements[i].drawText.setFont(*f);
+            while(i < this->gameField.elements.size()) {
+                this->gameField.elements[i].drawText.setFont(*f);
                 i++;
             }
             i = 0;
             int j = 0;
-            while(i < gameField.alliances.size()) {
+            while(i < this->gameField.alliances.size()) {
                 j = 0;
-                while(j < gameField.alliances[i].robots.size()) {
-                    gameField.alliances[i].robots[j].drawText.setFont(*f);
+                while(j < this->gameField.alliances[i].robots.size()) {
+                    this->gameField.alliances[i].robots[j].drawText.setFont(*f);
                     j++;
                 }
                 i++;
             }
-            while(window.isOpen()) {
+            while(this->window.isOpen()) {
                 sf::Event event;
-                while (window.pollEvent(event)) {
+                while (this->window.pollEvent(event)) {
                 }
-                if(!isRunning) {
-                    window.close();
-                    return 0;
+                if(!this->isRunning) {
+                    this->window.close();
                 }
-                window.clear();
-                gameField.draw(&window);
-                window.display();
+                this->window.clear();
+                this->gameField.draw(&window);
+                this->window.display();
             }
         });
     }
@@ -129,19 +144,51 @@ match::~match() {
 }
 
 void match::update(int t) {
-    //targeting
-    int a = 0;
-    int b = 0;
+    //update dropping
+    a = 0;
+    b = 0;
     while(a < gameField.alliances.size()) {
         b = 0;
         while(b < gameField.alliances[a].robots.size()) {
             char target = gameField.alliances[a].robots[b].targetAtTime(t);
-            std::vector<int> tmpTarCoord;
-            if(gameField.alliances[a].robots[b].hasCube || target == 'a') {
+            if(gameField.alliances[a].robots[b].hasCube) {
+                gameField.alliances[a].robots[b].hasCube = targetDrop(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, target);
+                if(!gameField.alliances[a].robots[b].hasCube) {
+                    gameField.alliances[a].robots[b].timeOut = 3; //dropping delay
+                }
+            }
+            else {
+                gameField.alliances[a].robots[b].hasCube = sourceGrab(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, gameField.alliances[a].robots[b].sourcePriority);
+                if(gameField.alliances[a].robots[b].hasCube) {
+                    gameField.alliances[a].robots[b].timeOut = 4; //grabbing time delay
+                }
+            }
+            b++;
+        }
+        a++;
+    }
+    //update powerUp
+    gameField.updatePowUp(t);
+    //targeting
+    a = 0;
+    b = 0;
+    while(a < gameField.alliances.size()) {
+        b = 0;
+        while(b < gameField.alliances[a].robots.size()) {
+            target = gameField.alliances[a].robots[b].targetAtTime(t);
+            if(gameField.alliances[a].robots[b].timeOut > 0) {
+                tmpTarCoord.clear();
+                tmpTarCoord.push_back(gameField.alliances[a].robots[b].posX);
+                tmpTarCoord.push_back(gameField.alliances[a].robots[b].posY);
+                gameField.alliances[a].robots[b].timeOut--;
+            }
+            else if(gameField.alliances[a].robots[b].hasCube || target == 'a' || target == 'c') {
                 tmpTarCoord = targetCoord(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, target);
+                gameField.alliances[a].robots[b].timeOut = 0;
             }
             else {
                 tmpTarCoord = sourceCoord(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, gameField.alliances[a].robots[b].sourcePriority);
+                gameField.alliances[a].robots[b].timeOut = 0;
             }
             gameField.alliances[a].robots[b].tarX = tmpTarCoord[0];
             gameField.alliances[a].robots[b].tarY = tmpTarCoord[1];
@@ -152,9 +199,9 @@ void match::update(int t) {
     //vel slowdown
     a = 0;
     b = 0;
-    int c = 0;
-    int d = 0;
-    bool collision = false;
+    c = 0;
+    d = 0;
+    collision = false;
     while(a < gameField.alliances.size()) {
         b = 0;
         while(b < gameField.alliances[a].robots.size()) {
@@ -189,6 +236,9 @@ void match::update(int t) {
         b = 0;
         while(b < gameField.alliances[a].robots.size()) {
             double angle = 1.570796325;
+            if(gameField.alliances[a].robots[b].tarX-gameField.alliances[a].robots[b].posX == 0 && gameField.alliances[a].robots[b].tarY-gameField.alliances[a].robots[b].posY < 0) {
+                    angle = -angle;
+            }
             if(gameField.alliances[a].robots[b].tarX-gameField.alliances[a].robots[b].posX != 0) {
                 angle = atan2((gameField.alliances[a].robots[b].tarY-gameField.alliances[a].robots[b].posY), (gameField.alliances[a].robots[b].tarX-gameField.alliances[a].robots[b].posX));
             }
@@ -196,10 +246,12 @@ void match::update(int t) {
             if(sqrt(pow(gameField.alliances[a].robots[b].tarX-gameField.alliances[a].robots[b].posX, 2) + pow(gameField.alliances[a].robots[b].tarY-gameField.alliances[a].robots[b].posY, 2)) < mag) {
                 mag = sqrt(pow(gameField.alliances[a].robots[b].tarX-gameField.alliances[a].robots[b].posX, 2) + pow(gameField.alliances[a].robots[b].tarY-gameField.alliances[a].robots[b].posY, 2));
             }
+            /*
             std::cout << "T: " << t << " Mag: " << mag << " X: " << gameField.alliances[a].robots[b].posX << " Y: " << gameField.alliances[a].robots[b].posY << std::endl;
             std::cout << "     TarX: " << gameField.alliances[a].robots[b].tarX << " TarY:" << gameField.alliances[a].robots[b].tarY << std::endl;
             std::cout << "     Angle: " << angle*57.2957795 << std::endl;
             std::cout << "     Has Cube: " << gameField.alliances[a].robots[b].hasCube << std::endl;
+            //*/
             gameField.alliances[a].robots[b].posY += static_cast<int>(round(sin(angle)*mag));
             gameField.alliances[a].robots[b].posX += static_cast<int>(round(cos(angle)*mag));
             if(gameField.alliances[a].robots[b].posY < 0) {
@@ -218,32 +270,223 @@ void match::update(int t) {
         }
         a++;
     }
-    //update dropping
-    a = 0;
-    b = 0;
-    while(a < gameField.alliances.size()) {
-        b = 0;
-        while(b < gameField.alliances[a].robots.size()) {
-            char target = gameField.alliances[a].robots[b].targetAtTime(t);
-            if(gameField.alliances[a].robots[b].hasCube) {
-                gameField.alliances[a].robots[b].hasCube = targetDrop(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, target);
-            }
-            else {
-                gameField.alliances[a].robots[b].hasCube = sourceGrab(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, gameField.alliances[a].robots[b].sourcePriority);
-            }
-            b++;
+    //pass cubes to vault
+    if(t == 149) {
+        int tmpScore0 = gameField.elements[26].currentCubeNum;
+        gameField.elements[26].currentCubeNum += gameField.elements[4].currentCubeNum;
+        if(gameField.elements[26].currentCubeNum > 9) {
+            gameField.elements[26].currentCubeNum = 9;
         }
-        a++;
+        gameField.elements[4].currentCubeNum -= gameField.elements[26].currentCubeNum - tmpScore0;
+
+        tmpScore0 = gameField.elements[27].currentCubeNum;
+        gameField.elements[27].currentCubeNum += gameField.elements[5].currentCubeNum;
+        if(gameField.elements[27].currentCubeNum > 9) {
+            gameField.elements[27].currentCubeNum = 9;
+        }
+        gameField.elements[5].currentCubeNum -= gameField.elements[27].currentCubeNum - tmpScore0;
     }
+    //update score
+    updateScore(t);
+    //update time
+    gameField.time.setString("T = " + std::to_string(t));
+}
+
+void match::updateScore(int t) {
+    if(t < 15) {
+        i = 0;
+        while(i < gameField.alliances[0].robots.size()) {
+            if(gameField.alliances[0].robots[i].posX >= 10) {
+                gameField.alliances[0].robots[i].hasAuto = true;
+            }
+            i++;
+        }
+        i = 0;
+        while(i < gameField.alliances[1].robots.size()) {
+            if(gameField.alliances[1].robots[i].posX <= 43) {
+                gameField.alliances[1].robots[i].hasAuto = true;
+            }
+            i++;
+        }
+    }
+    //red side switch
+    if(gameField.alliances[0].powerUpCurrLvl[0] == 1 || gameField.alliances[0].powerUpCurrLvl[0] == 3) {
+        gameField.alliances[0].cubeScore++;
+    }
+    else if(gameField.elements[17].currentCubeNum > gameField.elements[18].currentCubeNum) {
+        if(config[0] == 't') {
+            gameField.alliances[0].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[0].cubeScore++;
+                gameField.alliances[0].hasSwitchAuto = true;
+            }
+            if(gameField.alliances[0].powerUpCurrLvl[1] == 1 || gameField.alliances[0].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[0].cubeScore++;
+            }
+        }
+    }
+    else if(gameField.elements[17].currentCubeNum < gameField.elements[18].currentCubeNum) {
+        if(config[0] == 'b') {
+            gameField.alliances[0].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[0].cubeScore++;
+                gameField.alliances[0].hasSwitchAuto = true;
+            }
+            if(gameField.alliances[0].powerUpCurrLvl[1] == 1 || gameField.alliances[0].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[0].cubeScore++;
+            }
+        }
+    }
+    //scale
+    if(gameField.alliances[0].powerUpCurrLvl[0] == 2 || gameField.alliances[0].powerUpCurrLvl[0] == 3) {
+        gameField.alliances[0].cubeScore++;
+    }
+    else if(gameField.alliances[1].powerUpCurrLvl[0] == 2 || gameField.alliances[1].powerUpCurrLvl[0] == 3) {
+        gameField.alliances[1].cubeScore++;
+    }
+    else if(gameField.elements[21].currentCubeNum > gameField.elements[22].currentCubeNum) {
+        if(config[1] == 't') {
+            gameField.alliances[0].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[0].cubeScore++;
+            }
+            if(gameField.alliances[0].powerUpCurrLvl[1] == 1 || gameField.alliances[0].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[0].cubeScore++;
+            }
+        }
+        else {
+            gameField.alliances[1].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[1].cubeScore++;
+            }
+            if(gameField.alliances[1].powerUpCurrLvl[1] == 1 || gameField.alliances[1].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[1].cubeScore++;
+            }
+        }
+    }
+    else if(gameField.elements[21].currentCubeNum < gameField.elements[22].currentCubeNum) {
+        if(config[1] == 't') {
+            gameField.alliances[1].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[1].cubeScore++;
+            }
+            if(gameField.alliances[1].powerUpCurrLvl[1] == 1 || gameField.alliances[1].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[1].cubeScore++;
+            }
+        }
+        else {
+            gameField.alliances[0].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[0].cubeScore++;
+            }
+            if(gameField.alliances[0].powerUpCurrLvl[1] == 1 || gameField.alliances[0].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[0].cubeScore++;
+            }
+        }
+    }
+    //blue side switch
+    if(gameField.alliances[1].powerUpCurrLvl[0] == 1 || gameField.alliances[1].powerUpCurrLvl[0] == 3) {
+        gameField.alliances[1].cubeScore++;
+    }
+    else if(gameField.elements[19].currentCubeNum > gameField.elements[20].currentCubeNum) {
+        if(config[2] == 'b') {
+            gameField.alliances[1].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[1].cubeScore;
+                gameField.alliances[1].hasSwitchAuto = true;
+            }
+            if(gameField.alliances[1].powerUpCurrLvl[1] == 1 || gameField.alliances[1].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[1].cubeScore++;
+            }
+        }
+    }
+    else if(gameField.elements[19].currentCubeNum < gameField.elements[20].currentCubeNum) {
+        if(config[2] == 't') {
+            gameField.alliances[1].cubeScore++;
+            if(t < 15) {
+                gameField.alliances[1].cubeScore;
+                gameField.alliances[1].hasSwitchAuto = true;
+            }
+            if(gameField.alliances[1].powerUpCurrLvl[1] == 1 || gameField.alliances[1].powerUpCurrLvl[1] == 3) {
+                gameField.alliances[1].cubeScore++;
+            }
+        }
+    }
+
+    //sum auto
+    gameField.alliances[0].autoScore = 0;
+    i = 0;
+    while(i < gameField.alliances[0].robots.size()) {
+        if(gameField.alliances[0].robots[i].hasAuto) {
+            gameField.alliances[0].autoScore += 5;
+        }
+        i++;
+    }
+    gameField.alliances[1].autoScore = 0;
+    i = 0;
+    while(i < gameField.alliances[1].robots.size()) {
+        if(gameField.alliances[1].robots[i].hasAuto) {
+            gameField.alliances[1].autoScore += 5;
+        }
+        i++;
+    }
+    //sum vault
+    gameField.alliances[0].vaultScore = gameField.elements[26].currentCubeNum*5;
+    gameField.alliances[1].vaultScore = gameField.elements[27].currentCubeNum*5;
+    //check and sum climb
+    gameField.alliances[0].climbScore = 0;
+    gameField.alliances[1].climbScore = 0;
+    i = 0;
+    while(i < gameField.alliances[0].robots.size()) {
+        if(!gameField.alliances[0].robots[i].hasClimb && gameField.alliances[0].robots[i].posX >= 22 && gameField.alliances[0].robots[i].posX <= 25) {
+            if(gameField.alliances[0].robots[i].targetAtTime(t) == 'c' && gameField.alliances[0].robots[i].posY >= 8 && gameField.alliances[0].robots[i].posY <= 18) {
+                gameField.alliances[0].robots[i].hasClimb = (climb(generator) == 1);
+            }
+        }
+        i++;
+    }
+    i = 0;
+    while(i < gameField.alliances[1].robots.size()) {
+        if(!gameField.alliances[1].robots[i].hasClimb && gameField.alliances[1].robots[i].posX >= 28 && gameField.alliances[1].robots[i].posX <= 31) {
+            if(gameField.alliances[1].robots[i].targetAtTime(t) == 'c' && gameField.alliances[1].robots[i].posY >= 8 && gameField.alliances[1].robots[i].posY <= 18) {
+                gameField.alliances[1].robots[i].hasClimb = (climb(generator) == 1);
+            }
+        }
+        i++;
+    }
+
+    i = 0;
+    while(i < gameField.alliances[0].robots.size()) {
+        if(gameField.alliances[0].robots[i].hasClimb) {
+            gameField.alliances[0].climbScore += 30;
+        }
+        i++;
+    }
+    if(gameField.alliances[0].powerUpCurrLvl[2] == 4 && gameField.alliances[0].climbScore < 90) {
+        gameField.alliances[0].climbScore += 30;
+    }
+    i = 0;
+    while(i < gameField.alliances[1].robots.size()) {
+        if(gameField.alliances[1].robots[i].hasClimb) {
+            gameField.alliances[1].climbScore += 30;
+        }
+        i++;
+    }
+    if(gameField.alliances[1].powerUpCurrLvl[2] == 4 && gameField.alliances[1].climbScore < 90) {
+        gameField.alliances[1].climbScore += 30;
+    }
+
+    gameField.alliances[0].totalScore = gameField.alliances[0].autoScore + gameField.alliances[0].cubeScore + gameField.alliances[0].vaultScore + gameField.alliances[0].climbScore;
+    gameField.alliances[1].totalScore = gameField.alliances[1].autoScore + gameField.alliances[1].cubeScore + gameField.alliances[1].vaultScore + gameField.alliances[1].climbScore;
+    //gameField.alliances[0].totalScore = gameField.alliances[0].climbScore;
+    //gameField.alliances[1].totalScore = gameField.alliances[1].climbScore;
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 std::vector<int> match::targetCoord(int rx, int ry, bool isRed, char tar) {
-    int newX = 0;
-    int newY = 0;
-    std::string cconfig = config;
+    newX = 0;
+    newY = 0;
+    cconfig = config;
     //conversion to red only perspective
-    std::vector<int> tmpCoord;
-    int cx, cy;
     if(!isRed) {
         tmpCoord = gameField.coorConv(rx, ry);
         cx = tmpCoord[0];
@@ -459,7 +702,7 @@ bool match::targetDrop(int rx, int ry, bool isRed, char tar) {
         }
         if(config[2] == 't') {
             if(tar == 'x' && gameField.elements[19].currentCubeNum < gameField.elements[19].maxCubeNum) {
-                if(rx >= 12 && rx <= 15) {
+                if(rx >= 38 && rx <= 41) {
                     if(ry >= 8 && ry <= 10) {
                         gameField.elements[19].currentCubeNum++;
                         return false;
@@ -572,11 +815,11 @@ bool match::targetDrop(int rx, int ry, bool isRed, char tar) {
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 std::vector<int> match::sourceCoord(int rx, int ry, bool isRed, std::string sourcePriority) {
-    int newX = 0;
-    int newY = 0;
+    newX = 0;
+    newY = 0;
 
-    int i = sourcePriority.size();
-    char tar = 'n';
+    i = sourcePriority.size();
+    tar = 'n';
 
     if(isRed) {
         while(i >= 0) {
@@ -643,10 +886,10 @@ std::vector<int> match::sourceCoord(int rx, int ry, bool isRed, std::string sour
             }
             if(sourcePriority[i] == 'p') {
                 if(gameField.elements[0].currentCubeNum > 0) {
-                   tar = 't';
+                   tar = 'b';
                 }
                 if(gameField.elements[1].currentCubeNum > 0) {
-                   tar = 'b';
+                   tar = 't';
                 }
                 if(gameField.elements[0].currentCubeNum > 0 && gameField.elements[1].currentCubeNum > 0) {
                     if(ry >= 13) {
@@ -660,10 +903,8 @@ std::vector<int> match::sourceCoord(int rx, int ry, bool isRed, std::string sour
             i--;
         }
     }
-    std::cout << "   Tar: " << tar << std::endl;
     //conversion to red only perspective
-    std::vector<int> tmpCoord;
-    int cx, cy;
+    tmpCoord.clear();
     if(!isRed) {
         tmpCoord = gameField.coorConv(rx, ry);
         cx = tmpCoord[0];
@@ -853,8 +1094,8 @@ std::vector<int> match::sourceCoord(int rx, int ry, bool isRed, std::string sour
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 bool match::sourceGrab(int rx, int ry, bool isRed, std::string sourcePriority) {
-    int i = sourcePriority.size();
-    char tar = 'n';
+    i = sourcePriority.size();
+    tar = 'n';
 
     if(isRed) {
         while(i >= 0) {

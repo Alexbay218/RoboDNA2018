@@ -48,13 +48,17 @@ class robot {
 		int curMaxVel;
 		int posX, posY;
 		int tarX, tarY;
+		int timeOut;
 		bool hasCube;
+		bool hasClimb;
+		bool hasAuto;
 		sf::CircleShape drawShape;
 		sf::Text drawText;
 		sf::RectangleShape drawLine;
 
 		robot();
 		robot(std::string dna, std::string sP);
+		void init();
 		virtual ~robot();
 		char targetAtTime(int t);
 };

@@ -6,14 +6,8 @@ robot::robot() {
     autoStrat = "aaa";
     telopNoEG = "eeeeeeeeee";
     telopEG = "eee";
-    maxVel = 2;
 
-    curMaxVel = maxVel;
-    posX = 0;
-    posY = 0;
-    tarX = 0;
-    tarY = 0;
-    hasCube = true;
+    init();
 }
 
 robot::robot(std::string dna, std::string sP) {
@@ -36,7 +30,12 @@ robot::robot(std::string dna, std::string sP) {
     else {
         sourcePriority = "zsope";
     }
-    maxVel = 2;
+
+    init();
+}
+
+void robot::init() {
+    maxVel = 3;
 
     curMaxVel = maxVel;
     posX = 0;
@@ -44,6 +43,10 @@ robot::robot(std::string dna, std::string sP) {
     tarX = 0;
     tarY = 0;
     hasCube = true;
+    hasClimb = false;
+    hasAuto = false;
+
+    timeOut = 0;
 }
 
 robot::~robot() {
