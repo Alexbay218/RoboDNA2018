@@ -1,6 +1,8 @@
 #ifndef ALLIANCE_H
 #define ALLIANCE_H
 
+#include <sstream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "robot.h"
@@ -12,11 +14,8 @@ class alliance {
         std::vector<robot> robots;
         std::string powerUpOrder;
 
-        int totalScore;
-        int autoScore;
-        int cubeScore;
-        int vaultScore;
-        int climbScore;
+        int totalScore, autoScore, cubeScore, vaultScore, climbScore;
+        int rankPoint;
 
         //powerUp: 0 is force, 1 is boost, 2 is levitate
         std::vector<int> powerUpTime; //time requested after t = 15
@@ -32,9 +31,9 @@ class alliance {
         zsope | 5 char
         00000000 | 8 char
 
-        00000000aawwwwwwxxxxxwwwzsopeaawwwwwwxxxxxwwwzsopeaawwwwwwxxxxxwwwzsoper  | 72 char
-        | powUp | robot1        |    | robot2        |    | robot3        |    | color
-        0       8              24   29              45   50              66   71
+        00000000aawwwwwwxxxxxwwwzsopeaawwwwwwxxxxxwwwzsopeaawwwwwwxxxxxwwwzsope  | 71 char
+        | powUp | robot1        |    | robot2        |    | robot3        |
+        0       8              24   29              45   50              66
 
         000 | 000 | 00
         frc   bst   lev

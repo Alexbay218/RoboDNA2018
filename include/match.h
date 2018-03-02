@@ -13,21 +13,20 @@
 class match {
     public:
         field gameField;
-        sf::Clock clock;
         std::thread execMatch;
         std::thread winThread;
         sf::RenderWindow window;
         std::default_random_engine generator;
         std::uniform_int_distribution<int> climb;
 
-        std::mutex cout_mutex;
-
         bool isRunning;
         std::string config; //switch and scale config
         //three char indicating red pos (t or b) from left switch to right
         float speedMulti; //speed multiplier
 
-        match(alliance red, alliance blue,int ti, int sd, int dw, sf::Font* f, int winX, int winY);
+        std::string results; //red alliance config, blue alliance config, red score, blue score, red rp, blue rp
+
+        match(alliance* red, alliance* blue, int ti, int sd, int dw, sf::Font* f, int winX, int winY);
         virtual ~match();
         void update(int t);
         void updateScore(int t);

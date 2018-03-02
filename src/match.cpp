@@ -1,7 +1,7 @@
 #include "match.h"
 
 
-match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, int winX, int winY) {
+match::match(alliance* red, alliance* blue, int ti, int sd, int dw, sf::Font* f, int winX, int winY) {
     generator.seed(sd);
     std::uniform_int_distribution<int> r1Y(3,8);
     std::uniform_int_distribution<int> r2Y(13,18);
@@ -14,20 +14,18 @@ match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, i
 
     speedMulti = 1;
 
-    alliance rtmp = red;
-    alliance btmp = blue;
-    rtmp.robots[0].posY = r1Y(generator);
-    rtmp.robots[1].posY = r2Y(generator);
-    rtmp.robots[2].posY = r3Y(generator);
-    btmp.robots[0].posY = b1Y(generator);
-    btmp.robots[1].posY = b2Y(generator);
-    btmp.robots[2].posY = b3Y(generator);
-    btmp.robots[0].posX = 53;
-    btmp.robots[1].posX = 53;
-    btmp.robots[2].posX = 53;
 
     isRunning = true;
-    gameField = field(rtmp, btmp, dw);
+    gameField = field(red, blue, dw, f);
+    gameField.alliances[0].robots[0].posY = r1Y(generator);
+    gameField.alliances[0].robots[1].posY = r2Y(generator);
+    gameField.alliances[0].robots[2].posY = r3Y(generator);
+    gameField.alliances[1].robots[0].posY = b1Y(generator);
+    gameField.alliances[1].robots[1].posY = b2Y(generator);
+    gameField.alliances[1].robots[2].posY = b3Y(generator);
+    gameField.alliances[1].robots[0].posX = 53;
+    gameField.alliances[1].robots[1].posX = 53;
+    gameField.alliances[1].robots[2].posX = 53;
 
     //set config (string representing the position of red position from left to right)
     config = "";
@@ -64,10 +62,14 @@ match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, i
             t++;
         }
         isRunning = false;
-        std::string res = ("Red: " + std::to_string(gameField.alliances[0].totalScore) +  " Blue: " + std::to_string(gameField.alliances[1].totalScore) + "\n");
-        cout_mutex.lock();
-        std::cout << res;
-        cout_mutex.unlock();
+        results = "";
+        results += gameField.alliances[0].getAllianceConf() + ",";
+        results += gameField.alliances[1].getAllianceConf() + ",";
+        results += std::to_string(sd) + ",";
+        results += std::to_string(gameField.alliances[0].totalScore) + ",";
+        results += std::to_string(gameField.alliances[1].totalScore) + ",";
+        results += std::to_string(gameField.alliances[0].rankPoint) + ",";
+        results += std::to_string(gameField.alliances[1].rankPoint);
     });
 
     if(dw > 0) {
@@ -103,28 +105,10 @@ match::match(alliance red, alliance blue, int ti, int sd, int dw, sf::Font* f, i
                 static_cast<int>(this->gameField.backGround.getSize().y*1.125f)
             ), "RoboDNA2018", sf::Style::None);
             this->window.setPosition(sf::Vector2i(static_cast<int>(this->gameField.backGround.getSize().x*1.125f*winX), static_cast<int>(this->gameField.backGround.getSize().y*1.125f*winY)));
-            this->window.setFramerateLimit(1000/ti);
+            //this->window.setFramerateLimit(1000/ti);
             this->window.setActive(false);
             //set fonts
-            this->gameField.redScore.setFont(*f);
-            this->gameField.blueScore.setFont(*f);
-            this->gameField.time.setFont(*f);
 
-            int i = 0;
-            while(i < this->gameField.elements.size()) {
-                this->gameField.elements[i].drawText.setFont(*f);
-                i++;
-            }
-            i = 0;
-            int j = 0;
-            while(i < this->gameField.alliances.size()) {
-                j = 0;
-                while(j < this->gameField.alliances[i].robots.size()) {
-                    this->gameField.alliances[i].robots[j].drawText.setFont(*f);
-                    j++;
-                }
-                i++;
-            }
             while(this->window.isOpen()) {
                 sf::Event event;
                 while (this->window.pollEvent(event)) {
@@ -154,13 +138,13 @@ void match::update(int t) {
             if(gameField.alliances[a].robots[b].hasCube) {
                 gameField.alliances[a].robots[b].hasCube = targetDrop(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, target);
                 if(!gameField.alliances[a].robots[b].hasCube) {
-                    gameField.alliances[a].robots[b].timeOut = 3; //dropping delay
+                    gameField.alliances[a].robots[b].timeOut = 2; //dropping delay
                 }
             }
             else {
                 gameField.alliances[a].robots[b].hasCube = sourceGrab(gameField.alliances[a].robots[b].posX, gameField.alliances[a].robots[b].posY, gameField.alliances[a].isRed, gameField.alliances[a].robots[b].sourcePriority);
                 if(gameField.alliances[a].robots[b].hasCube) {
-                    gameField.alliances[a].robots[b].timeOut = 4; //grabbing time delay
+                    gameField.alliances[a].robots[b].timeOut = 3; //grabbing time delay
                 }
             }
             b++;
@@ -438,48 +422,74 @@ void match::updateScore(int t) {
     gameField.alliances[1].climbScore = 0;
     i = 0;
     while(i < gameField.alliances[0].robots.size()) {
-        if(!gameField.alliances[0].robots[i].hasClimb && gameField.alliances[0].robots[i].posX >= 22 && gameField.alliances[0].robots[i].posX <= 25) {
-            if(gameField.alliances[0].robots[i].targetAtTime(t) == 'c' && gameField.alliances[0].robots[i].posY >= 8 && gameField.alliances[0].robots[i].posY <= 18) {
+        gameField.alliances[0].robots[i].hasPark = false;
+        if(gameField.alliances[0].robots[i].posX >= 22 && gameField.alliances[0].robots[i].posX <= 25 && gameField.alliances[0].robots[i].posY >= 8 && gameField.alliances[0].robots[i].posY <= 18) {
+            if(!gameField.alliances[0].robots[i].hasClimb && gameField.alliances[0].robots[i].targetAtTime(t) == 'c') {
                 gameField.alliances[0].robots[i].hasClimb = (climb(generator) == 1);
             }
+            gameField.alliances[0].robots[i].hasPark = true;
         }
         i++;
     }
     i = 0;
     while(i < gameField.alliances[1].robots.size()) {
-        if(!gameField.alliances[1].robots[i].hasClimb && gameField.alliances[1].robots[i].posX >= 28 && gameField.alliances[1].robots[i].posX <= 31) {
-            if(gameField.alliances[1].robots[i].targetAtTime(t) == 'c' && gameField.alliances[1].robots[i].posY >= 8 && gameField.alliances[1].robots[i].posY <= 18) {
+        gameField.alliances[1].robots[i].hasPark = false;
+        if(gameField.alliances[1].robots[i].posX >= 28 && gameField.alliances[1].robots[i].posX <= 31 && gameField.alliances[1].robots[i].posY >= 8 && gameField.alliances[1].robots[i].posY <= 18) {
+            if(!gameField.alliances[1].robots[i].hasClimb && gameField.alliances[1].robots[i].targetAtTime(t) == 'c') {
                 gameField.alliances[1].robots[i].hasClimb = (climb(generator) == 1);
             }
+            gameField.alliances[1].robots[i].hasPark = true;
         }
         i++;
     }
 
     i = 0;
+    a = 0;
+    b = 0;
     while(i < gameField.alliances[0].robots.size()) {
         if(gameField.alliances[0].robots[i].hasClimb) {
             gameField.alliances[0].climbScore += 30;
+            a++;
+        }
+        else if(gameField.alliances[0].robots[i].hasPark) {
+            gameField.alliances[0].climbScore += 5;
+            b++;
         }
         i++;
     }
-    if(gameField.alliances[0].powerUpCurrLvl[2] == 4 && gameField.alliances[0].climbScore < 90) {
+    if(gameField.alliances[0].powerUpCurrLvl[2] == 4 && a < 3) {
         gameField.alliances[0].climbScore += 30;
+        if(b > 0) {
+            gameField.alliances[0].climbScore -= 5;
+        }
     }
     i = 0;
+    a = 0;
+    b = 0;
     while(i < gameField.alliances[1].robots.size()) {
         if(gameField.alliances[1].robots[i].hasClimb) {
             gameField.alliances[1].climbScore += 30;
+            a++;
+        }
+        else if(gameField.alliances[1].robots[i].hasPark) {
+            gameField.alliances[1].climbScore += 5;
+            b++;
         }
         i++;
     }
-    if(gameField.alliances[1].powerUpCurrLvl[2] == 4 && gameField.alliances[1].climbScore < 90) {
+    if(gameField.alliances[1].powerUpCurrLvl[2] == 4 && a < 3) {
         gameField.alliances[1].climbScore += 30;
+        if(b > 0) {
+            gameField.alliances[1].climbScore -= 5;
+        }
     }
 
     gameField.alliances[0].totalScore = gameField.alliances[0].autoScore + gameField.alliances[0].cubeScore + gameField.alliances[0].vaultScore + gameField.alliances[0].climbScore;
     gameField.alliances[1].totalScore = gameField.alliances[1].autoScore + gameField.alliances[1].cubeScore + gameField.alliances[1].vaultScore + gameField.alliances[1].climbScore;
-    //gameField.alliances[0].totalScore = gameField.alliances[0].climbScore;
-    //gameField.alliances[1].totalScore = gameField.alliances[1].climbScore;
+    //gameField.alliances[0].totalScore = gameField.alliances[0].cubeScore;
+    //gameField.alliances[1].totalScore = gameField.alliances[1].cubeScore;
+    //update ranking points
+    gameField.updateRP();
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 std::vector<int> match::targetCoord(int rx, int ry, bool isRed, char tar) {

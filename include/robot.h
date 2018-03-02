@@ -2,17 +2,12 @@
 #define ROBOT_H
 
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <string>
+#include <sstream>
 
 class robot {
 	public:
-		std::string robotType;
-		/*
-			e - exchange
-			w - switch
-			s - scale
-			c - climb
-		*/
 		std::string sourcePriority;
 		/*
 			e - exchange (return)
@@ -52,6 +47,7 @@ class robot {
 		bool hasCube;
 		bool hasClimb;
 		bool hasAuto;
+		bool hasPark;
 		sf::CircleShape drawShape;
 		sf::Text drawText;
 		sf::RectangleShape drawLine;

@@ -12,18 +12,17 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-fomit-frame-pointer" />
-					<Add option="-fexpensive-optimizations" />
-					<Add option="-O3" />
 					<Add option="-std=c++11" />
 					<Add option="-m32" />
+					<Add option="-g" />
 					<Add option="-DSFML_STATIC" />
 					<Add directory="include" />
 					<Add directory="D:/Libraries/SFML-2.4.2/include" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
 					<Add option="-m32" />
+					<Add option="-lstdc++fs" />
+					<Add option="-lktmw32" />
 					<Add library="D:/Libraries/SFML-2.4.2/lib/libsfml-graphics.a" />
 					<Add library="D:/Libraries/SFML-2.4.2/lib/libsfml-window.a" />
 					<Add library="D:/Libraries/SFML-2.4.2/lib/libsfml-system.a" />
@@ -36,14 +35,20 @@
 		</Compiler>
 		<Unit filename="include/alliance.h" />
 		<Unit filename="include/element.h" />
+		<Unit filename="include/engine.h" />
 		<Unit filename="include/field.h" />
+		<Unit filename="include/genenigine.h" />
 		<Unit filename="include/match.h" />
+		<Unit filename="include/modengine.h" />
 		<Unit filename="include/robot.h" />
 		<Unit filename="src/alliance.cpp" />
 		<Unit filename="src/element.cpp" />
+		<Unit filename="src/engine.cpp" />
 		<Unit filename="src/field.cpp" />
+		<Unit filename="src/genenigine.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/match.cpp" />
+		<Unit filename="src/modengine.cpp" />
 		<Unit filename="src/robot.cpp" />
 		<Extensions>
 			<code_completion />

@@ -11,17 +11,39 @@ field::field() {
     init();
 }
 
-field::field(alliance red, alliance blue, int sm) {
-    std::vector<alliance> atmp;
-    atmp.push_back(red);
-    atmp.push_back(blue);
+field::field(alliance* red, alliance* blue, int sm, sf::Font* f) {
+    alliances.clear();
+    alliances.push_back(*red);
+    alliances.push_back(*blue);
+    alliances[0].isRed = true;
+    alliances[1].isRed = false;
 
-    alliances = atmp;
     sizeMulti = sm;
     init();
+    redScore.setFont(*f);
+    blueScore.setFont(*f);
+    redPwrUp.setFont(*f);
+    bluePwrUp.setFont(*f);
+    time.setFont(*f);
+    int i = 0;
+    while(i < elements.size()) {
+        elements[i].drawText.setFont(*f);
+        i++;
+    }
+    i = 0;
+    int j = 0;
+    while(i < alliances.size()) {
+        j = 0;
+        while(j < alliances[i].robots.size()) {
+            alliances[i].robots[j].drawText.setFont(*f);
+            alliances[i].robots[j].drawText.setFont(*f);
+            j++;
+        }
+        i++;
+    }
 }
 
-field::~field() {
+field::~field() {;
 }
 
 void field::init() {
@@ -33,39 +55,43 @@ void field::init() {
     redScore.setPosition((23*sizeMulti)-redScore.getLocalBounds().width, 27*sizeMulti);
     blueScore.setPosition(29*sizeMulti, 27*sizeMulti);
 
+    redPwrUp.setCharacterSize(sizeMulti*1.75f);
+    bluePwrUp.setCharacterSize(sizeMulti*1.75f);
+    redPwrUp.setPosition((19*sizeMulti)-redScore.getLocalBounds().width, 27*sizeMulti);
+    bluePwrUp.setPosition(33*sizeMulti, 27*sizeMulti);
+
     time.setCharacterSize(sizeMulti*1.8f);
     time.setPosition(54*sizeMulti, 27*sizeMulti);
 
-    std::vector<element> etmp;
-    etmp.push_back(*(new element("topBluePortal",6,0, sf::Color::Blue,0,0,3,3,sizeMulti)));         //00
-    etmp.push_back(*(new element("botBluePortal",6,0, sf::Color::Blue,0,24,3,3,sizeMulti)));        //01
-    etmp.push_back(*(new element("topRedPortal",6,0, sf::Color::Red,51,0,3,3,sizeMulti)));          //02
-    etmp.push_back(*(new element("botRedPortal",6,0, sf::Color::Red,51,24,3,3,sizeMulti)));         //03
-    etmp.push_back(*(new element("redExchange",0,60, sf::Color::Red,0,9,3,4,sizeMulti)));            //04
-    etmp.push_back(*(new element("blueExchange",0,60, sf::Color::Blue,51,14,3,4,sizeMulti)));        //05
-    etmp.push_back(*(new element("redAutoLine",0,0, sf::Color(175,175,175),10,0,1,27,sizeMulti)));  //06
-    etmp.push_back(*(new element("blueAutoLine",0,0, sf::Color(175,175,175),43,0,1,27,sizeMulti))); //07
-    etmp.push_back(*(new element("redPowCubeZone",10,0, sf::Color(200,0,0),9,12,3,3,sizeMulti)));   //08
-    etmp.push_back(*(new element("bluePowCubeZone",10,0, sf::Color(0,0,200),42,12,3,3,sizeMulti))); //09
-    etmp.push_back(*(new element("redPlatformZone",0,0, sf::Color(200,0,0),22,8,4,11,sizeMulti)));  //10
-    etmp.push_back(*(new element("bluePlatformZone",0,0, sf::Color(0,0,200),28,8,4,11,sizeMulti))); //11
-    etmp.push_back(*(new element("redBackZone",6,0, sf::Color(200,0,0),16,9,2,9,sizeMulti)));       //12
-    etmp.push_back(*(new element("blueBackZone",6,0, sf::Color(0,0,200),36,9,2,9,sizeMulti)));      //13
-    etmp.push_back(*(new element("redSwitchBlock",0,0, sf::Color(75,75,75),12,11,4,5,sizeMulti)));  //14
-    etmp.push_back(*(new element("blueSwitchBlock",0,0, sf::Color(75,75,75),38,11,4,5,sizeMulti))); //15
-    etmp.push_back(*(new element("scaleBlock",0,0, sf::Color(75,75,75),26,9,2,9,sizeMulti)));       //16
-    etmp.push_back(*(new element("redTopSwitch",0,60, sf::Color::Yellow,12,8,4,3,sizeMulti)));      //17
-    etmp.push_back(*(new element("redBotSwitch",0,60, sf::Color::Yellow,12,16,4,3,sizeMulti)));     //18
-    etmp.push_back(*(new element("blueTopSwitch",0,60, sf::Color::Yellow,38,8,4,3,sizeMulti)));     //19
-    etmp.push_back(*(new element("blueBotSwitch",0,60, sf::Color::Yellow,38,16,4,3,sizeMulti)));    //20
-    etmp.push_back(*(new element("topScale",0,60, sf::Color::Yellow,25,6,4,3,sizeMulti)));          //21
-    etmp.push_back(*(new element("botScale",0,60, sf::Color::Yellow,25,18,4,3,sizeMulti)));         //22
-    etmp.push_back(*(new element("redScoreBG",0,0, sf::Color(235,0,0),0,27,27,7,sizeMulti)));       //23
-    etmp.push_back(*(new element("blueScoreBG",0,0, sf::Color(0,0,235),27,27,27,7,sizeMulti)));     //24
-    etmp.push_back(*(new element("sidePanelBG",0,0, sf::Color(200,200,200),54,0,7,34,sizeMulti)));  //25
-    etmp.push_back(*(new element("redVault",0,9, sf::Color::Red,55,7,5,5,sizeMulti)));              //26
-    etmp.push_back(*(new element("blueVault",0,9, sf::Color::Blue,55,15,5,5,sizeMulti)));           //27
-    elements = etmp;
+    elements.clear();
+    elements.push_back(element("topBluePortal",6,0, sf::Color::Blue,0,0,3,3,sizeMulti));         //00
+    elements.push_back(element("botBluePortal",6,0, sf::Color::Blue,0,24,3,3,sizeMulti));        //01
+    elements.push_back(element("topRedPortal",6,0, sf::Color::Red,51,0,3,3,sizeMulti));          //02
+    elements.push_back(element("botRedPortal",6,0, sf::Color::Red,51,24,3,3,sizeMulti));         //03
+    elements.push_back(element("redExchange",0,60, sf::Color::Red,0,9,3,4,sizeMulti));            //04
+    elements.push_back(element("blueExchange",0,60, sf::Color::Blue,51,14,3,4,sizeMulti));        //05
+    elements.push_back(element("redAutoLine",0,0, sf::Color(175,175,175),10,0,1,27,sizeMulti));  //06
+    elements.push_back(element("blueAutoLine",0,0, sf::Color(175,175,175),43,0,1,27,sizeMulti)); //07
+    elements.push_back(element("redPowCubeZone",10,0, sf::Color(200,0,0),9,12,3,3,sizeMulti));   //08
+    elements.push_back(element("bluePowCubeZone",10,0, sf::Color(0,0,200),42,12,3,3,sizeMulti)); //09
+    elements.push_back(element("redPlatformZone",0,0, sf::Color(200,0,0),22,8,4,11,sizeMulti));  //10
+    elements.push_back(element("bluePlatformZone",0,0, sf::Color(0,0,200),28,8,4,11,sizeMulti)); //11
+    elements.push_back(element("redBackZone",6,0, sf::Color(200,0,0),16,9,2,9,sizeMulti));       //12
+    elements.push_back(element("blueBackZone",6,0, sf::Color(0,0,200),36,9,2,9,sizeMulti));      //13
+    elements.push_back(element("redSwitchBlock",0,0, sf::Color(75,75,75),12,11,4,5,sizeMulti));  //14
+    elements.push_back(element("blueSwitchBlock",0,0, sf::Color(75,75,75),38,11,4,5,sizeMulti)); //15
+    elements.push_back(element("scaleBlock",0,0, sf::Color(75,75,75),26,9,2,9,sizeMulti));       //16
+    elements.push_back(element("redTopSwitch",0,60, sf::Color::Yellow,12,8,4,3,sizeMulti));      //17
+    elements.push_back(element("redBotSwitch",0,60, sf::Color::Yellow,12,16,4,3,sizeMulti));     //18
+    elements.push_back(element("blueTopSwitch",0,60, sf::Color::Yellow,38,8,4,3,sizeMulti));     //19
+    elements.push_back(element("blueBotSwitch",0,60, sf::Color::Yellow,38,16,4,3,sizeMulti));    //20
+    elements.push_back(element("topScale",0,60, sf::Color::Yellow,25,6,4,3,sizeMulti));          //21
+    elements.push_back(element("botScale",0,60, sf::Color::Yellow,25,18,4,3,sizeMulti));         //22
+    elements.push_back(element("redScoreBG",0,0, sf::Color(235,0,0),0,27,27,7,sizeMulti));       //23
+    elements.push_back(element("blueScoreBG",0,0, sf::Color(0,0,235),27,27,27,7,sizeMulti));     //24
+    elements.push_back(element("sidePanelBG",0,0, sf::Color(200,200,200),54,0,7,34,sizeMulti));  //25
+    elements.push_back(element("redVault",0,9, sf::Color::Red,55,7,5,5,sizeMulti));              //26
+    elements.push_back(element("blueVault",0,9, sf::Color::Blue,55,15,5,5,sizeMulti));           //27
 
     int h = 0;
     int i = 0;
@@ -101,7 +127,7 @@ void field::updatePowUp(int t) {
         a = 0;
         while(a < alliances.size()) {
             b = 0;
-            while(b < alliances[a].powerUpCurrLvl.size()-1) {
+            while(b < alliances[a].powerUpCurrLvl.size()) {
                 if(alliances[a].powerUpCurrLvl[b] > 0 && alliances[a].powerUpCurrLvl[b] < 4) {
                     if(alliances[a].powerUpTime[b]+10 <= t+15) {
                         alliances[a].powerUpCurrLvl[b] = 4;
@@ -134,14 +160,14 @@ void field::updatePowUp(int t) {
                         if(!hasPow && alliances[a].powerUpTime[b] <= t+15 && elements[4+a].currentCubeNum > 0) {
                             if(b < alliances[a].powerUpCurrLvl.size()-1) {
                                 if(alliances[a].powerUpLvl[b] > elements[4+a].currentCubeNum) {
+                                    alliances[a].powerUpCurrLvl[b] = elements[4+a].currentCubeNum;
                                     elements[26+a].currentCubeNum += elements[4+a].currentCubeNum;
                                     elements[4+a].currentCubeNum = 0;
-                                    alliances[a].powerUpCurrLvl[b] = elements[4+a].currentCubeNum;
                                 }
                                 else {
+                                    alliances[a].powerUpCurrLvl[b] = alliances[a].powerUpLvl[b];
                                     elements[26+a].currentCubeNum += alliances[a].powerUpLvl[b];
                                     elements[4+a].currentCubeNum -= alliances[a].powerUpLvl[b];
-                                    alliances[a].powerUpCurrLvl[b] = alliances[a].powerUpLvl[b];
                                 }
                                 hasPow = true;
                             }
@@ -160,9 +186,36 @@ void field::updatePowUp(int t) {
     }
 }
 
+void field::updateRP() {
+    alliances[0].rankPoint = 0;
+    alliances[1].rankPoint = 0;
+    if(alliances[0].totalScore > alliances[1].totalScore) {
+        alliances[0].rankPoint += 2;
+    }
+    else if(alliances[0].totalScore < alliances[1].totalScore) {
+        alliances[1].rankPoint += 2;
+    }
+    else {
+        alliances[0].rankPoint++;
+        alliances[1].rankPoint++;
+    }
+    if(alliances[0].climbScore == 90) {
+        alliances[0].rankPoint++;
+    }
+    if(alliances[1].climbScore == 90) {
+        alliances[1].rankPoint++;
+    }
+    if(alliances[0].autoScore == 15 && alliances[0].hasSwitchAuto) {
+        alliances[0].rankPoint++;
+    }
+    if(alliances[1].autoScore == 15 && alliances[1].hasSwitchAuto) {
+        alliances[1].rankPoint++;
+    }
+}
+
 void field::draw(sf::RenderWindow* rw) {
     rw->draw(backGround);
-    int i = 0;
+    i = 0;
     while(i < elements.size()) {
         rw->draw(elements[i].drawShape);
         if(elements[i].maxCubeNum > 0 || elements[i].initCubeNum > 0) {
@@ -171,19 +224,19 @@ void field::draw(sf::RenderWindow* rw) {
         }
         i++;
     }
-    int h = 0;
+    h = 0;
     i = 0;
     while(h < alliances.size()) {
         i = 0;
         while(i < alliances[h].robots.size()) {
-            double angle = 1.570796325;
+            angle = 1.570796325;
             if(alliances[h].robots[i].tarX-alliances[h].robots[i].posX == 0 && alliances[h].robots[i].tarY-alliances[h].robots[i].posY < 0) {
                     angle = -angle;
             }
             if(alliances[h].robots[i].tarX-alliances[h].robots[i].posX != 0) {
                 angle = atan2((alliances[h].robots[i].tarY-alliances[h].robots[i].posY), (alliances[h].robots[i].tarX-alliances[h].robots[i].posX));
             }
-            double mag = sqrt(pow(alliances[h].robots[i].tarX-alliances[h].robots[i].posX, 2) + pow(alliances[h].robots[i].tarY-alliances[h].robots[i].posY, 2));
+            mag = sqrt(pow(alliances[h].robots[i].tarX-alliances[h].robots[i].posX, 2) + pow(alliances[h].robots[i].tarY-alliances[h].robots[i].posY, 2));
 
             alliances[h].robots[i].drawLine.setPosition(alliances[h].robots[i].posX*sizeMulti+sizeMulti*0.75,alliances[h].robots[i].posY*sizeMulti+sizeMulti*0.75);
             alliances[h].robots[i].drawLine.setSize(sf::Vector2f(mag*sizeMulti,sizeMulti/2));
@@ -204,9 +257,34 @@ void field::draw(sf::RenderWindow* rw) {
         }
         h++;
     }
+    sRPW = "";
+    sBPW = "";
+    if(alliances[0].powerUpCurrLvl[0] > 0 && alliances[0].powerUpCurrLvl[0] < 4) {
+        sRPW += "F " + std::to_string(alliances[0].powerUpCurrLvl[0]) + " ";
+    }
+    if(alliances[0].powerUpCurrLvl[1] > 0 && alliances[0].powerUpCurrLvl[1] < 4) {
+        sRPW += "B " + std::to_string(alliances[0].powerUpCurrLvl[1]) + " ";
+    }
+    if(alliances[0].powerUpCurrLvl[2] == 4) {
+        sRPW += "L";
+    }
 
+    if(alliances[1].powerUpCurrLvl[0] > 0 && alliances[1].powerUpCurrLvl[0] < 4) {
+        sBPW += "F " + std::to_string(alliances[1].powerUpCurrLvl[0]) + " ";
+    }
+    if(alliances[1].powerUpCurrLvl[1] > 0 && alliances[1].powerUpCurrLvl[1] < 4) {
+        sBPW += "B " + std::to_string(alliances[1].powerUpCurrLvl[1]) + " ";
+    }
+    if(alliances[1].powerUpCurrLvl[2] == 4) {
+        sBPW += "L";
+    }
+
+    redPwrUp.setString(sRPW);
+    bluePwrUp.setString(sBPW);
     redScore.setString(std::to_string(alliances[0].totalScore));
     blueScore.setString(std::to_string(alliances[1].totalScore));
+    rw->draw(redPwrUp);
+    rw->draw(bluePwrUp);
     rw->draw(redScore);
     rw->draw(blueScore);
     rw->draw(time);

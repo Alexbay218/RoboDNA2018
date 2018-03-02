@@ -1,5 +1,5 @@
 #include "element.h"
-
+#include <iostream>
 element::element() {
     name = "topBluePortal";
     initCubeNum = 7;

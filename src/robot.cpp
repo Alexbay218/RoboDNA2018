@@ -1,7 +1,6 @@
 #include "robot.h"
 
 robot::robot() {
-    robotType = 'e';
     sourcePriority = "zsope";
     autoStrat = "aaa";
     telopNoEG = "eeeeeeeeee";
@@ -11,8 +10,7 @@ robot::robot() {
 }
 
 robot::robot(std::string dna, std::string sP) {
-//enforce climb only here
-    robotType = 'e';
+    //enforce climb only here
     sourcePriority = "zsope";
     if(dna.size() == 16) {
         autoStrat = dna.substr(0,3);
@@ -30,6 +28,20 @@ robot::robot(std::string dna, std::string sP) {
     else {
         sourcePriority = "zsope";
     }
+    bool isClimbing = false;
+    std::stringstream tmp;
+    for(int i = 0;i < telopEG.size();i++) {
+        if(telopEG[i] == 'c') {
+            isClimbing = true;
+        }
+        if(isClimbing) {
+            tmp << "c";
+        }
+        else {
+            tmp << telopEG[i];
+        }
+    }
+    telopEG = tmp.str();
 
     init();
 }
@@ -45,6 +57,7 @@ void robot::init() {
     hasCube = true;
     hasClimb = false;
     hasAuto = false;
+    hasPark = false;
 
     timeOut = 0;
 }
